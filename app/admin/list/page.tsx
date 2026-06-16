@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function AdminListPage() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<any[]>([]);
   const [table, setTable] = useState("doctors"); // الجدول الافتراضي
   const [loading, setLoading] = useState(false);
   const router = useRouter();
