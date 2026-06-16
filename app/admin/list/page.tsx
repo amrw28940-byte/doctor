@@ -16,7 +16,7 @@ export default function AdminListPage() {
   const fetchData = async () => {
     setLoading(true);
     const { data, error } = await supabase.from(table).select("*");
-    if (!error) setItems(data || []);
+    if (!error) setItems((data as any) || []);
     setLoading(false);
   };
 
