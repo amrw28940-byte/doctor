@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase"; // تم التعديل هنا
 import { Editor } from '@tinymce/tinymce-react';
 import { useSearchParams, useRouter } from "next/navigation"; 
 
@@ -10,6 +10,9 @@ export default function AdminPage() {
   const id = searchParams.get("id");
   const table = searchParams.get("table") || "doctors";
   
+  // تهيئة supabase كمتغير داخل المكون
+  const supabase = createClient(); 
+
   const [formData, setFormData] = useState({
     title: "", name: "", specialty: "", slug: "", content: "",
     metaTitle: "", metaDescription: "", keywords: "",

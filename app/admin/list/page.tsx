@@ -1,17 +1,20 @@
 "use client";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useMemo } from "react";
+import { createClient } from "@/lib/supabase"; // التعديل: استيراد الدالة
 import { useRouter } from "next/navigation";
 
 export default function AdminListPage() {
+  // التعديل: تهيئة العميل داخل المكون باستخدام useMemo
+  const supabase = useMemo(() => createClient(), []);
+  
   const [items, setItems] = useState<any[]>([]);
-  const [table, setTable] = useState("doctors"); // الجدول الافتراضي
+  const [table, setTable] = useState("doctors"); 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     fetchData();
-  }, [table]);
+  }, [table, supabase]); // أضفنا supabase كـ dependency
 
   const fetchData = async () => {
     setLoading(true);
@@ -25,7 +28,6 @@ export default function AdminListPage() {
       <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
         <h1 className="text-3xl font-bold text-white">إدارة المحتوى</h1>
         <button 
-          // التعديل هنا: أضفنا table في الرابط
           onClick={() => router.push(`/admin?table=${table}`)} 
           className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition"
         >
@@ -33,7 +35,6 @@ export default function AdminListPage() {
         </button>
       </div>
 
-      {/* التبويبات */}
       <div className="flex gap-2 mb-8">
         {["posts", "doctors", "pages"].map((t) => (
           <button 
@@ -69,7 +70,6 @@ export default function AdminListPage() {
                   </td>
                   <td className="p-4 text-center">
                     <button 
-                      // التعديل هنا: أضفنا table بجانب الـ id في الرابط
                       onClick={() => router.push(`/admin?id=${item.id}&table=${table}`)}
                       className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md font-bold transition"
                     >
