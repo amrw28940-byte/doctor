@@ -1,17 +1,25 @@
 "use client";
 import { useEffect, useState } from 'react';
 
-export default function IntroVideo({ onComplete }) {
+// تحديد نوع الدالة onComplete
+interface IntroVideoProps {
+  onComplete: () => void;
+}
+
+export default function IntroVideo({ onComplete }: IntroVideoProps) {
   const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     // التحقق هل هذه الزيارة هي الأولى في الجلسة الحالية
-    const hasSeenIntro = sessionStorage.getItem('hasSeenIntro');
+    // نتحقق من وجود window لتجنب أخطاء Server-Side Rendering
+    if (typeof window !== 'undefined') {
+      const hasSeenIntro = sessionStorage.getItem('hasSeenIntro');
 
-    if (!hasSeenIntro) {
-      setShowVideo(true);
-    } else {
-      onComplete(); // إذا شاهد الفيديو سابقاً، انتقل للموقع فوراً
+      if (!hasSeenIntro) {
+        setShowVideo(true);
+      } else {
+        onComplete(); 
+      }
     }
   }, [onComplete]);
 
@@ -25,7 +33,12 @@ export default function IntroVideo({ onComplete }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-      <video autoPlay muted onEnded={handleVideoEnd} className="w-full h-full object-cover">
+      <video 
+        autoPlay 
+        muted 
+        onEnded={handleVideoEnd} 
+        className="w-full h-full object-cover"
+      >
         <source src="/your-logo-video.mp4" type="video/mp4" />
       </video>
     </div>
