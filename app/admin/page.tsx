@@ -1,38 +1,25 @@
 "use client";
-export const dynamic = 'force-dynamic';
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase"; // تم التعديل هنا
+import { useState, useEffect, Suspense } from "react";
+import { createClient } from "@/lib/supabase";
 import { Editor } from '@tinymce/tinymce-react';
-import { useSearchParams, useRouter } from "next/navigation"; 
+import { useSearchParams, useRouter } from "next/navigation";
 
-export default function AdminPage() {
+// دالة العرض الرئيسية
+function AdminContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const id = searchParams.get("id");
   const table = searchParams.get("table") || "doctors";
   
-  // تهيئة supabase كمتغير داخل المكون
   const supabase = createClient(); 
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     title: "", name: "", specialty: "", slug: "", content: "",
     metaTitle: "", metaDescription: "", keywords: "",
     status: "draft", publishDate: ""
   });
 
-  const autoSave = async (data: any) => {
-    if (id) {
-       await supabase.from(table).update(data).eq("id", id);
-    }
-  };
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (id) autoSave(formData);
-    }, 3000);
-    return () => clearTimeout(handler);
-  }, [formData, id]);
-
+  // جلب البيانات عند تغيير الـ ID
   useEffect(() => {
     if (id) {
       const fetchData = async () => {
@@ -41,8 +28,9 @@ export default function AdminPage() {
       };
       fetchData();
     }
-  }, [id, table]);
+  }, [id, table, supabase]);
 
+  // دالة الحفظ
   const save = async (statusValue: string) => {
     const dataToSave = { ...formData, status: statusValue };
     const { error } = id 
@@ -69,31 +57,26 @@ export default function AdminPage() {
         )}
       </div>
 
-      <div className="space-y-4 border-t pt-4">
-        <h2 className="font-bold">إعدادات SEO:</h2>
-        <input value={formData.metaTitle} placeholder="Meta Title" className="w-full p-3 border rounded" onChange={(e) => setFormData({...formData, metaTitle: e.target.value})} />
-        <input value={formData.metaDescription} placeholder="Meta Description" className="w-full p-3 border rounded" onChange={(e) => setFormData({...formData, metaDescription: e.target.value})} />
-        <input value={formData.keywords} placeholder="الكلمات المفتاحية" className="w-full p-3 border rounded" onChange={(e) => setFormData({...formData, keywords: e.target.value})} />
-      </div>
-
       <Editor
         apiKey='s4pcjzqnekovuogu93bs10otfvy5new6cyv7zp6n6gnaem3o'
         value={formData.content}
         onEditorChange={(newContent) => setFormData({...formData, content: newContent})}
-        init={{ 
-          height: 400,
-          menubar: true,
-          plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount',
-          toolbar: 'undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table | forecolor backcolor removeformat | help'
-        }}
+        init={{ height: 400, menubar: true, plugins: 'link image code', toolbar: 'undo redo | bold italic | alignleft aligncenter | link image' }}
       />
 
       <div className="flex gap-4 pt-4">
         <button onClick={() => save("draft")} className="flex-1 bg-gray-500 text-white p-4 rounded-lg font-bold">حفظ مسودة</button>
         <button onClick={() => save("published")} className="flex-1 bg-green-600 text-white p-4 rounded-lg font-bold">نشر الآن</button>
-        <button onClick={() => save("scheduled")} className="flex-1 bg-yellow-600 text-white p-4 rounded-lg font-bold">جدولة</button>
-        <button onClick={() => window.open(`/preview/${table}/${id || 'new'}`, '_blank')} className="flex-1 bg-blue-500 text-white p-4 rounded-lg font-bold">معاينة</button>
       </div>
     </div>
+  );
+}
+
+// التعديل الأهم: تغليف المكون بـ Suspense لحل خطأ الـ Build
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">جاري تحميل لوحة التحكم...</div>}>
+      <AdminContent />
+    </Suspense>
   );
 }
