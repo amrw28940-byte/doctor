@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase"; // تم التعديل هنا
 import { Editor } from '@tinymce/tinymce-react';
