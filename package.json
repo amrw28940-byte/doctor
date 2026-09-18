@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@sanity/image-url": "^2.1.1",
-    "@supabase/supabase-js": "^2.108.1",
     "@tinymce/tinymce-react": "^6.3.0",
     "@tiptap/extension-bullet-list": "^3.26.1",
     "@tiptap/extension-heading": "^3.26.1",
