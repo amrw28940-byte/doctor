@@ -35,6 +35,45 @@ export default {
       title: 'نبذة تعريفية',
       type: 'text',
     },
+    // --- الحقول الجديدة (الخبرة، المستشفى، الزيارة، الخدمات، جدول العيادات) ---
+    {
+      name: 'experience',
+      title: 'سنوات الخبرة (مثال: 19)',
+      type: 'string',
+    },
+    {
+      name: 'hospital',
+      title: 'المستشفى أو العيادة الأساسية',
+      type: 'string',
+    },
+    {
+      name: 'homeVisit',
+      title: 'يقدم زيارة منزلية',
+      type: 'boolean',
+    },
+    {
+      name: 'servicesAvailable',
+      title: 'يوجد خدمات',
+      type: 'boolean',
+    },
+    {
+      name: 'clinics',
+      title: 'عيادات ومواعيد الطبيب (جدول)',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          title: 'عيادة',
+          fields: [
+            { name: 'name', title: 'اسم / فرع العيادة', type: 'string' },
+            { name: 'address', title: 'العنوان', type: 'string' },
+            { name: 'days', title: 'أيام العمل', type: 'string' },
+            { name: 'time', title: 'المواعيد (الساعات)', type: 'string' },
+          ],
+        },
+      ],
+    },
+    // -------------------------------------------------------------------
     {
       name: 'contact',
       title: 'معلومات التواصل والخرائط',

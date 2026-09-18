@@ -11,13 +11,14 @@ const client = createClient({
 export const revalidate = 0;
 
 export default async function DoctorsPage() {
-  // جلب كافة احتمالات حقول التخصص والعنوان لضمان ظهورها مهما كانت مسمياتها في سانتي
+  // تم إضافة specialization للـ Query لجلب التخصص المكتوب في سانتي بدقة
   const doctors = await client.fetch(`
     *[_type in ["doctor", "joinRequest"] && (category == "doctor" || category == "الأطباء" || defined(name))] {
       _id,
       name,
       phone,
       specialty,
+      specialization,
       address,
       city,
       category,
@@ -37,7 +38,7 @@ export default async function DoctorsPage() {
                 {/* صورة الطبيب كاملة وبدون قص */}
                 <div className="w-full h-52 bg-gray-950 rounded-xl overflow-hidden mb-4 border border-gray-700 flex items-center justify-center p-2">
                   {doctor.imageUrl ? (
-                    <img src={doctor.imageUrl} alt={doctor.name} className="w-full h-full object-contain" />
+                    <img src={doctor.imageUrl} alt={doctor.name || 'طبيب'} className="w-full h-full object-contain" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-500 text-sm">لا توجد صورة</div>
                   )}
@@ -46,12 +47,12 @@ export default async function DoctorsPage() {
                 {/* اسم الدكتور بوضوح */}
                 <h2 className="text-2xl font-bold mb-1">{doctor.name || 'طبيب'}</h2>
                 
-                {/* التخصص البارز على الكارت */}
+                {/* التخصص تحت اسم الدكتور مباشرة */}
                 <p className="text-red-400 font-semibold text-base mb-1">
-                  {doctor.specialty || (doctor.category !== 'doctor' && doctor.category !== 'الأطباء' ? doctor.category : 'تخصص عام')}
+                  {doctor.specialization || doctor.specialty || 'تخصص عام'}
                 </p>
 
-                {/* العنوان أو البادية إن وجد */}
+                {/* العنوان أو المدينة إن وجد */}
                 {(doctor.address || doctor.city) && (
                   <p className="text-gray-400 text-sm mb-4">📍 {doctor.address || doctor.city}</p>
                 )}
