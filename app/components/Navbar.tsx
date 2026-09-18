@@ -15,8 +15,13 @@ export default function Navbar() {
   useEffect(() => {
     const user = localStorage.getItem('user');
     if (user) {
-      setIsLoggedIn(true);
-      setUserRole(JSON.parse(user).role);
+      try {
+        const parsedUser = JSON.parse(user);
+        setIsLoggedIn(true);
+        setUserRole(parsedUser.role || '');
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
     }
 
     // إغلاق القائمة المنسدلة عند الضغط في أي مكان خارجها
@@ -25,6 +30,7 @@ export default function Navbar() {
         setIsDropdownOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -36,7 +42,6 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-black/80 backdrop-blur-md w-full z-50 relative">
-      
       {/* 1. اللوجو */}
       <Link href="/" className="flex items-center shrink-0">
         <Image 
@@ -53,6 +58,7 @@ export default function Navbar() {
       <button 
         className="md:hidden text-white text-3xl focus:outline-none" 
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle Menu"
       >
         {isOpen ? "✕" : "☰"}
       </button>
@@ -61,6 +67,9 @@ export default function Navbar() {
       <ul className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col md:flex-row absolute md:static top-full left-0 w-full md:w-auto bg-black/95 md:bg-transparent p-6 md:p-0 gap-4 lg:gap-6 font-medium text-white text-sm lg:text-base items-center transition-all duration-300 shadow-lg md:shadow-none`}>
         <li>
           <Link href="/" onClick={() => setIsOpen(false)} className="hover:text-red-500 transition-colors">الرئيسية</Link>
+        </li>
+        <li>
+          <Link href="/services" onClick={() => setIsOpen(false)} className="hover:text-red-500 transition-colors">الخدمات</Link>
         </li>
         <li>
           <Link href="/doctors" onClick={() => setIsOpen(false)} className="hover:text-red-500 transition-colors">الأطباء</Link>
@@ -80,17 +89,13 @@ export default function Navbar() {
         <li>
           <Link href="/blog" onClick={() => setIsOpen(false)} className="hover:text-red-500 transition-colors">المدونة</Link>
         </li>
-        <li>
-          <Link href="/contact" onClick={() => setIsOpen(false)} className="hover:text-red-500 transition-colors">اتصل بنا</Link>
-        </li>
       </ul>
 
       {/* 4. الأزرار (تتغير بناءً على حالة تسجيل الدخول) */}
       <div className="hidden md:flex items-center gap-4 shrink-0">
-        
         {isLoggedIn ? (
           <>
-            {/* زر حسابي الشخصي (يظهر فقط إذا كان مسجلاً للدخول) */}
+            {/* حسابي الشخصي */}
             <Link 
               href={userRole === 'provider' ? '/provider/dashboard' : '/patient/profile'} 
               className="text-sm font-medium text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] flex items-center gap-2"
@@ -98,8 +103,7 @@ export default function Navbar() {
               <span>👤</span>
               <span>حسابي الشخصي</span>
             </Link>
-
-            {/* زر تسجيل الخروج */}
+            {/* تسجيل خروج */}
             <button 
               onClick={handleLogout}
               className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
@@ -109,15 +113,14 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            {/* زر تسجيل الدخول (يظهر للزوار فقط) */}
+            {/* تسجيل الدخول */}
             <Link 
               href="/login" 
               className="text-sm font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-all border border-gray-800"
             >
               تسجيل الدخول
             </Link>
-
-            {/* القائمة المنسدلة لـ "انضم إلينا" (تظهر للزوار فقط) */}
+            {/* قائمة انضم إلينا */}
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -126,7 +129,6 @@ export default function Navbar() {
                 <span>انضم إلينا</span>
                 <span className={`text-xs transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
               </button>
-
               {isDropdownOpen && (
                 <div className="absolute left-0 mt-2 w-48 bg-black/95 border border-red-900/50 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl">
                   <Link 
@@ -148,9 +150,7 @@ export default function Navbar() {
             </div>
           </>
         )}
-
       </div>
-
     </nav>
   );
 }

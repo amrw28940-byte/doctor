@@ -1,109 +1,69 @@
+import Link from "next/link";
 import { createClient } from "@sanity/client";
 
 const client = createClient({
-  projectId: 'uqvfweh3',
-  dataset: 'production',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'kqicvwbx',
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-03-01',
   useCdn: false,
 });
 
-export default async function DoctorProfile({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export const revalidate = 0;
 
-  // جلب كافة الحقول المحتملة للتخصص والعنوان لضمان ظهورها بدون إشكالية
-  const doctor = await client.fetch(
-    `*[_id == $id][0] {
+export default async function DoctorsPage() {
+  // جلب كافة الأطباء وطلبات الانضمام من Sanity
+  const doctors = await client.fetch(`
+    *[_type in ["doctor", "joinRequest"] && (category == "doctor" || category == "الأطباء" || defined(name))] {
+      _id,
       name,
       phone,
       specialty,
       address,
       city,
       category,
-      bio,
-      website,
-      googleMapUrl,
-      socialLinks,
       "imageUrl": image.asset->url
-    }`,
-    { id }
-  );
-
-  if (!doctor) {
-    return <div className="text-center py-32 text-white text-xl">عذراً، الطبيب غير موجود.</div>;
-  }
-
-  // استخراج التخصص الصحيح (تفضيل specialty، ثم الـ category إذا لم تكن كلمة doctor التقنية)
-  const displaySpecialty = doctor.specialty || 
-    (doctor.category && doctor.category !== 'doctor' && doctor.category !== 'الأطباء' ? doctor.category : 'طبيب بشري');
-
-  // استخراج العنوان أو البادية الصحيحة
-  const displayAddress = doctor.address || doctor.city;
+    }
+  `);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 pt-32">
-      <div className="max-w-3xl mx-auto bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-2xl space-y-6">
-        
-        {/* الصورة كاملة وبدون أي قص */}
-        <div className="w-full h-96 bg-gray-950 rounded-2xl overflow-hidden border border-gray-700 shadow-md flex items-center justify-center p-2">
-          {doctor.imageUrl ? (
-            <img src={doctor.imageUrl} alt={doctor.name} className="w-full h-full object-contain" />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">لا توجد صورة شخصية</div>
-          )}
-        </div>
+    <div className="max-w-6xl mx-auto py-20 px-6 text-white pt-32">
+      <h1 className="text-4xl font-bold mb-12 text-center text-red-500">نخبة أطبائنا</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {doctors && doctors.length > 0 ? (
+          doctors.map((doctor: any) => (
+            <Link key={doctor._id} href={`/doctors/${doctor._id}`}>
+              <div className="bg-gray-800 p-5 rounded-2xl border border-gray-700 hover:border-red-500 transition cursor-pointer shadow-xl overflow-hidden flex flex-col">
+                
+                {/* صورة الطبيب */}
+                <div className="w-full h-52 bg-gray-950 rounded-xl overflow-hidden mb-4 border border-gray-700 flex items-center justify-center p-2">
+                  {doctor.imageUrl ? (
+                    <img src={doctor.imageUrl} alt={doctor.name || 'طبيب'} className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 text-sm">لا توجد صورة</div>
+                  )}
+                </div>
 
-        {/* بيانات الطبيب الأساسية (الاسم، التخصص الحقيقي، العنوان/البادية، والهاتف) */}
-        <div className="text-center border-b border-gray-700 pb-6 space-y-2">
-          <h1 className="text-3xl font-bold">{doctor.name}</h1>
-          
-          {/* التخصص الواضح */}
-          <p className="text-red-400 font-semibold text-lg">{displaySpecialty}</p>
-          
-          {/* العنوان أو البادية إن وجد */}
-          {displayAddress && (
-            <p className="text-gray-300 text-base">📍 العنوان / البادية: <span className="text-white font-medium">{displayAddress}</span></p>
-          )}
-
-          <p className="text-gray-400 font-mono text-sm pt-2">الهاتف: {doctor.phone}</p>
-        </div>
-
-        {/* النبذة التعريفية */}
-        {doctor.bio && (
-          <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-700">
-            <h3 className="text-lg font-semibold text-red-500 mb-2">النبذة التعريفية</h3>
-            <p className="text-gray-300 leading-relaxed whitespace-pre-line">{doctor.bio}</p>
-          </div>
+                {/* اسم الطبيب */}
+                <h2 className="text-2xl font-bold mb-1">{doctor.name || 'طبيب'}</h2>
+                
+                {/* التخصص */}
+                <p className="text-red-400 font-semibold text-base mb-1">
+                  {doctor.specialty || (doctor.category && doctor.category !== 'doctor' && doctor.category !== 'الأطباء' ? doctor.category : 'تخصص عام')}
+                </p>
+                
+                {/* العنوان أو المدينة */}
+                {(doctor.address || doctor.city) && (
+                  <p className="text-gray-400 text-sm mb-4">📍 {doctor.address || doctor.city}</p>
+                )}
+                
+                <button className="w-full bg-red-600 hover:bg-red-700 py-2 rounded-xl font-bold transition mt-auto">عرض التفاصيل</button>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <p className="text-gray-400 text-center col-span-3 py-10">لا يوجد أطباء مسجلين حالياً.</p>
         )}
-
-        {/* المواقع والروابط */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {doctor.website && (
-            <a href={doctor.website} target="_blank" rel="noopener noreferrer" className="bg-gray-900/60 p-4 rounded-xl border border-gray-700 text-blue-400 hover:border-red-500 text-center block font-semibold transition">
-              🌐 زيارة الموقع الإلكتروني
-            </a>
-          )}
-          {doctor.googleMapUrl && (
-            <a href={doctor.googleMapUrl} target="_blank" rel="noopener noreferrer" className="bg-gray-900/60 p-4 rounded-xl border border-gray-700 text-green-400 hover:border-red-500 text-center block font-semibold transition">
-              📍 موقع العيادة على خريطة جوجل
-            </a>
-          )}
-        </div>
-
-        {/* وسائل التواصل الاجتماعي */}
-        {doctor.socialLinks && Object.values(doctor.socialLinks).some(Boolean) && (
-          <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-700">
-            <h3 className="text-lg font-semibold text-red-500 mb-4 text-center">وسائل التواصل الاجتماعي</h3>
-            <div className="flex flex-wrap justify-center gap-3">
-              {doctor.socialLinks.whatsapp && <a href={doctor.socialLinks.whatsapp} target="_blank" rel="noopener noreferrer" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-xl text-sm font-bold transition">واتساب</a>}
-              {doctor.socialLinks.facebook && <a href={doctor.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-bold transition">فيسبوك</a>}
-              {doctor.socialLinks.instagram && <a href={doctor.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-xl text-sm font-bold transition">انستجرام</a>}
-              {doctor.socialLinks.youtube && <a href={doctor.socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-sm font-bold transition">يوتيوب</a>}
-              {doctor.socialLinks.snapchat && <a href={doctor.socialLinks.snapchat} target="_blank" rel="noopener noreferrer" className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-xl text-sm font-bold transition">سناب شات</a>}
-              {doctor.socialLinks.tiktok && <a href={doctor.socialLinks.tiktok} target="_blank" rel="noopener noreferrer" className="bg-black hover:bg-gray-800 border border-gray-700 px-4 py-2 rounded-xl text-sm font-bold transition">تيك توك</a>}
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );
