@@ -1,19 +1,41 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Navbar from "./components/Navbar";
 import SplashScreen from "./components/SplashScreen";
 import "./globals.css";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // 1. إذا كان المسار يتبع لوحة تحكم سانتي، لا تظهر الانترو نهائياً
+    if (pathname?.startsWith("/studio")) {
+      setShowSplash(false);
+      return;
+    }
+
+    // 2. التحقق مما إذا شاهد المستخدم الفيديو مسبقاً في هذه الجلسة
+    const hasSeenSplash = sessionStorage.getItem("hasSeenSplash");
+    if (!hasSeenSplash) {
+      setShowSplash(true);
+    }
+  }, [pathname]);
+
+  const handleComplete = () => {
+    setShowSplash(false);
+    sessionStorage.setItem("hasSeenSplash", "true"); // حفظ أنه شاهده لكي لا يتكرر
+  };
 
   return (
     <html lang="ar" dir="rtl">
       <body className="bg-black min-h-screen text-white relative overflow-x-hidden">
         
-        {/* الـ Splash يظهر فوق الجميع */}
+        {/* الـ Splash يظهر مرة واحدة فقط وفقط خارج الـ studio */}
         {showSplash && (
-          <SplashScreen onComplete={() => setShowSplash(false)} />
+          <SplashScreen onComplete={handleComplete} />
         )}
 
         {/* الخلفية تظهر دائماً */}
